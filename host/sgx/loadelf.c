@@ -1222,17 +1222,12 @@ done:
 
 static oe_result_t _patch_elf_image(
     oe_enclave_elf_image_t* image,
-    oe_sgx_load_context_t* context,
-    size_t enclave_size,
-    size_t tls_page_count)
+    size_t enclave_size)
 {
     oe_result_t result = OE_UNEXPECTED;
     oe_sgx_enclave_properties_t* oeprops;
     uint64_t enclave_rva = 0;
     uint64_t module_base = 0;
-
-    OE_UNUSED(context);
-    OE_UNUSED(tls_page_count);
 
     oeprops =
         (oe_sgx_enclave_properties_t*)(image->image_base + image->oeinfo_rva);
@@ -1304,30 +1299,16 @@ done:
     return result;
 }
 
-static oe_result_t _patch(
-    oe_enclave_image_t* image,
-    oe_sgx_load_context_t* context,
-    size_t enclave_size)
+static oe_result_t _patch(oe_enclave_image_t* image, size_t enclave_size)
 {
-    oe_result_t result = OE_UNEXPECTED;
-    size_t tls_page_count;
-
-    OE_CHECK(image->get_tls_page_count(image, &tls_page_count));
-    OE_CHECK(
-        _patch_elf_image(&image->elf, context, enclave_size, tls_page_count));
-
-    result = OE_OK;
-done:
-    return result;
+    return _patch_elf_image(&image->elf, enclave_size);
 }
 
 static oe_result_t _sgx_load_enclave_properties(
     const oe_enclave_image_t* image,
-    const char* section_name,
     oe_sgx_enclave_properties_t* properties)
 {
     oe_result_t result = OE_UNEXPECTED;
-    OE_UNUSED(section_name);
 
     /* Copy from the image at oeinfo_rva. */
     OE_CHECK(oe_memcpy_s(
@@ -1344,11 +1325,9 @@ done:
 
 static oe_result_t _sgx_update_enclave_properties(
     const oe_enclave_image_t* image,
-    const char* section_name,
     const oe_sgx_enclave_properties_t* properties)
 {
     oe_result_t result = OE_UNEXPECTED;
-    OE_UNUSED(section_name);
 
     /* Copy to both the image and ELF file*/
     OE_CHECK(oe_memcpy_s(
