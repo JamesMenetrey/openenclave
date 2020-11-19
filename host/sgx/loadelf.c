@@ -29,6 +29,8 @@
 #include "openenclave/bits/result.h"
 #include "sgxload.h"
 
+#include "dynlink.h"
+
 /* Forward declarations */
 static oe_result_t _load_elf_image(char* path, oe_enclave_elf_image_t* image);
 
@@ -1422,6 +1424,12 @@ oe_result_t oe_load_elf_enclave_image(
 {
     oe_result_t result = OE_UNEXPECTED;
 
+    /* TEMP: load DSO shim in parallel to _load_elf_image */
+    dso_t* dso = NULL;
+    oe_dso_load_state_t load_state = {0};
+    OE_CHECK(oe_load_enclave_dso(path, &load_state, NULL, &dso));
+    OE_CHECK(oe_load_deps(&load_state, dso));
+
     memset(image, 0, sizeof(oe_enclave_image_t));
     char* image_path = oe_strdup(path);
 
@@ -1457,6 +1465,9 @@ done:
 
     if (OE_OK != result)
         _unload_image(image);
+
+    /* TEMP: cleanup of DSO object */
+    oe_unload_enclave_dso(&load_state);
 
     return result;
 }

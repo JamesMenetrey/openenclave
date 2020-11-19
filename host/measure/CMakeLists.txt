@@ -50,6 +50,7 @@ if (OE_SGX)
     signkey.c
     ${PROJECT_SOURCE_DIR}/common/sgx/sgxmeasure.c
     sgx/create.c
+    sgx/dynlink.c
     sgx/elf.c
     sgx/load.c
     sgx/loadelf.c
@@ -179,6 +180,8 @@ if (UNIX)
   target_compile_options(
     oehostmr
     PRIVATE -Wno-attributes -Wmissing-prototypes -fPIC ${PLATFORM_FLAGS}
+            #TEMP: Allow compiler to check unused functions during porting
+            -Wno-unused-function
     PUBLIC -fstack-protector-strong)
   target_compile_definitions(
     oehostmr
